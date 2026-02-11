@@ -40,4 +40,5 @@ if api_key:
             st.markdown(answer)
             st.session_state.messages.append({"role": "assistant", "content": answer})
 else:
+
     st.info("Please enter your OpenAI API Key in the sidebar to start learning!")
