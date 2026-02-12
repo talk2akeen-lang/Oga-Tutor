@@ -73,7 +73,7 @@ if prompt := st.chat_input("Ask Oga Tutor..."):
             # This "appends" the new lesson to your spreadsheet
             existing_data = conn.read()
             updated_df = pd.concat([existing_data, new_entry], ignore_index=True)
-            conn.update(data=updated_df)
+            conn.update(worksheet="Sheet1", data=updated_df)
         
         # Voice & Share buttons
         tts = gTTS(text=answer, lang='en')
@@ -82,3 +82,4 @@ if prompt := st.chat_input("Ask Oga Tutor..."):
         st.audio(fp)
         
         st.session_state.messages.append({"role": "assistant", "content": answer})
+
