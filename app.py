@@ -2,43 +2,59 @@ import streamlit as st
 from openai import OpenAI
 from gtts import gTTS
 import io
-from PIL import Image # For the textbook scanner
+from PIL import Image
+import pandas as pd
+from datetime import datetime
+from streamlit_gsheets import GSheetsConnection # The "Bridge" to Google Sheets
 
+# 1. STYLE & PAGE SETUP (Always first)
 st.set_page_config(page_title="Oga Tutor", layout="centered")
+st.markdown("""
+    <style>
+    .stApp { background-color: white; }
+    .stSidebar { background-color: #008751; }
+    h2 { color: #008751; font-size: 28px !important; }
+    </style>
+    """, unsafe_allow_html=True)
 
-# Smaller Header for mobile
-st.markdown("## 🇳🇬 Oga Tutor: Your Exam Assistant")
+st.markdown("## 🇳🇬 Oga Tutor: Study & Save")
 
+# 2. CONNECTIONS (OpenAI and Google Sheets)
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+# This connects to the spreadsheet link you will put in your Secrets
+conn = st.connection("gsheets", type=GSheetsConnection)
 
+# 3. SIDEBAR (The Profile Section)
+with st.sidebar:
+    st.write("### 👤 Student Profile")
+    student_name = st.text_input("Your Name:", placeholder="e.g. Tunde")
+    if student_name:
+        st.success(f"Welcome, {student_name}!")
+
+# 4. CHAT HISTORY SETUP
 if "messages" not in st.session_state:
     st.session_state.messages = [
-        {"role": "system", "content": "You are a professional teacher. Answer 90% in formal English and 10% in Pidgin at the end. Explain textbook questions clearly."}
+        {"role": "system", "content": "You are a professional teacher. Answer 90% in formal English and 10% in Pidgin at the end."}
     ]
 
-# --- FEATURE 1: TEXTBOOK SCANNER ---
-st.write("📸 **Scan your textbook:**")
-uploaded_file = st.file_uploader("Upload or take a photo of any Question Paper", type=["jpg", "jpeg", "png"])
+# 5. SCANNER SECTION
+st.write("📸 **Scan textbook question:**")
+uploaded_file = st.file_uploader("", type=["jpg", "jpeg", "png"])
 
-if uploaded_file is not None:
-    image = Image.open(uploaded_file)
-    st.image(image, caption="Uploaded Image", use_column_width=True)
-    st.info("Oga is looking at your textbook... (Type 'Explain this photo' below)")
-
-# Display chat
+# 6. DISPLAY OLD MESSAGES
 for message in st.session_state.messages:
     if message["role"] != "system":
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
-# Chat Input
-if prompt := st.chat_input("Ask or type 'WAEC/JAMB/NECO Questions Here'"):
+# 7. THE BRAIN & SAVING LOGIC
+if prompt := st.chat_input("Ask Oga Tutor..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
 
     with st.chat_message("assistant"):
-        # If student uploaded a file, we tell the AI to be extra helpful
+        # Get answer from AI
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=st.session_state.messages
@@ -46,25 +62,23 @@ if prompt := st.chat_input("Ask or type 'WAEC/JAMB/NECO Questions Here'"):
         answer = response.choices[0].message.content
         st.markdown(answer)
         
-        # --- FEATURE 2: VOICE & DOWNLOAD ---
-        col1, col2 = st.columns(2)
-        with col1:
-            # Voice
-            tts = gTTS(text=answer, lang='en')
-            fp = io.BytesIO()
-            tts.write_to_fp(fp)
-            st.audio(fp, format='audio/mp3')
+        # --- SAVE TO GOOGLE SHEETS ---
+        if student_name:
+            new_entry = pd.DataFrame([{
+                "Name": student_name,
+                "Question": prompt,
+                "Answer": answer,
+                "Date": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            }])
+            # This "appends" the new lesson to your spreadsheet
+            existing_data = conn.read()
+            updated_df = pd.concat([existing_data, new_entry], ignore_index=True)
+            conn.update(data=updated_df)
         
-        with col2:
-            # Download Button (Save for offline)
-            st.download_button(
-                label="💾 Save Lesson",
-                data=answer,
-                file_name="oga_tutor_lesson.txt",
-                mime="text/plain"
-            )
+        # Voice & Share buttons
+        tts = gTTS(text=answer, lang='en')
+        fp = io.BytesIO()
+        tts.write_to_fp(fp)
+        st.audio(fp)
         
         st.session_state.messages.append({"role": "assistant", "content": answer})
-
-
-
