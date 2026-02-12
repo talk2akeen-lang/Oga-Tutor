@@ -7,7 +7,7 @@ from PIL import Image # For the textbook scanner
 st.set_page_config(page_title="Oga Tutor", layout="centered")
 
 # Smaller Header for mobile
-st.markdown("## 🇳🇬 Oga Tutor: Study & Scan")
+st.markdown("## 🇳🇬 Oga Tutor: Your Exam Assistant")
 
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
@@ -18,7 +18,7 @@ if "messages" not in st.session_state:
 
 # --- FEATURE 1: TEXTBOOK SCANNER ---
 st.write("📸 **Scan your textbook:**")
-uploaded_file = st.file_uploader("Upload or take a photo of a question", type=["jpg", "jpeg", "png"])
+uploaded_file = st.file_uploader("Upload or take a photo of a question paper", type=["jpg", "jpeg", "png"])
 
 if uploaded_file is not None:
     image = Image.open(uploaded_file)
@@ -32,7 +32,7 @@ for message in st.session_state.messages:
             st.markdown(message["content"])
 
 # Chat Input
-if prompt := st.chat_input("Ask or type 'Explain the photo'"):
+if prompt := st.chat_input("Ask or type 'WAEC/JAMB/NECO Question'"):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
@@ -65,3 +65,4 @@ if prompt := st.chat_input("Ask or type 'Explain the photo'"):
             )
         
         st.session_state.messages.append({"role": "assistant", "content": answer})
+
