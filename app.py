@@ -18,7 +18,7 @@ if "messages" not in st.session_state:
 
 # --- FEATURE 1: TEXTBOOK SCANNER ---
 st.write("📸 **Scan your textbook:**")
-uploaded_file = st.file_uploader("Upload or take a photo of a question paper", type=["jpg", "jpeg", "png"])
+uploaded_file = st.file_uploader("Upload or take a photo of any Question Paper", type=["jpg", "jpeg", "png"])
 
 if uploaded_file is not None:
     image = Image.open(uploaded_file)
@@ -65,4 +65,5 @@ if prompt := st.chat_input("Ask or type 'WAEC/JAMB/NECO Question'"):
             )
         
         st.session_state.messages.append({"role": "assistant", "content": answer})
+
 
