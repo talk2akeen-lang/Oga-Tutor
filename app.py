@@ -32,7 +32,7 @@ for message in st.session_state.messages:
             st.markdown(message["content"])
 
 # Chat Input
-if prompt := st.chat_input("Ask or type 'WAEC/JAMB/NECO Question'"):
+if prompt := st.chat_input("Ask or type 'WAEC/JAMB/NECO Questions Here'"):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
@@ -65,5 +65,6 @@ if prompt := st.chat_input("Ask or type 'WAEC/JAMB/NECO Question'"):
             )
         
         st.session_state.messages.append({"role": "assistant", "content": answer})
+
 
 
